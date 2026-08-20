@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkControl - Sistema de Estacionamento</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            color: #20242a;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 240px;
+            height: 100vh;
+            background: #17212b;
+            color: white;
+            padding: 25px 15px;
+            z-index: 10;
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 23px;
+            font-weight: bold;
+            margin-bottom: 35px;
+        }
+
+        .logo span {
+            color: #36a3ff;
+        }
+
+        .menu button {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #cbd2d9;
+            padding: 14px;
+            text-align: left;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .menu button:hover,
+        .menu button.active {
+            background: #263849;
+            color: white;
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: 240px;
+            padding: 25px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .topbar h1 {
+            font-size: 27px;
+        }
+
+        .date {
+            color: #69727d;
+        }
+
+        /* SECTIONS */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* CARDS */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .06);
+        }
+
+        .card-title {
+            color: #707983;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 29px;
+            font-weight: bold;
+        }
+
+        .blue {
+            color: #1687e8;
+        }
+
+        .green {
+            color: #20a464;
+        }
+
+        .red {
+            color: #e74c3c;
+        }
+
+        .orange {
+            color: #f39c12;
+        }
+
+        /* PANEL */
+        .panel {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .06);
+            margin-bottom: 25px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .panel-header h2 {
+            font-size: 19px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            border: none;
+            border-radius: 7px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #1687e8;
+            color: white;
+        }
+
+        .btn-success {
+            background: #20a464;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: .88;
+        }
+
+        /* VAGAS */
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .vaga {
+            min-height: 95px;
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .vaga.livre {
+            background: #20a464;
+        }
+
+        .vaga.ocupada {
+            background: #e74c3c;
+        }
+
+        .vaga.preferencial {
+            background: #f39c12;
+        }
+
+        .vaga.pcd {
+            background: #1687e8;
+        }
+
+        .vaga.moto {
+            background: #7b61c9;
+        }
+
+        .vaga strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .vaga small {
+            opacity: .9;
+        }
+
+        /* TABLE */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 13px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e8ebee;
+        }
+
+        th {
+            color: #68727c;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-livre {
+            background: #d9f5e6;
+            color: #167647;
+        }
+
+        .status-ocupada {
+            background: #ffe0dd;
+            color: #b52e22;
+        }
+
+        /* FORM */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 17px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #59636e;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            padding: 11px;
+            border: 1px solid #d6dce1;
+            border-radius: 7px;
+            outline: none;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #1687e8;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* FILTRO */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 500px;
+            max-width: 90%;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            border: none;
+            background: none;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        /* RELATÓRIOS */
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .report-card {
+            border: 1px solid #e2e6e9;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .report-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .report-number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* RESPONSIVO */
+        @media (max-width: 1000px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .parking-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .report-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .logo {
+                font-size: 0;
+            }
+
+            .logo span {
+                font-size: 20px;
+            }
+
+            .menu button {
+                font-size: 0;
+                text-align: center;
+            }
+
+            .menu button::first-letter {
+                font-size: 20px;
+            }
+
+            .main {
+                margin-left: 70px;
+            }
+
+            .cards,
+            .form-grid,
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .parking-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            PARK<span>CONTROL</span>
+        </div>
+
+        <div class="menu">
+            <button class="active" onclick="mostrarSecao('dashboard', this)">🏠 Dashboard</button>
+            <button onclick="mostrarSecao('entrada', this)">🚗 Entrada / Saída</button>
+            <button onclick="mostrarSecao('vagas', this)">🅿️ Vagas</button>
+            <button onclick="mostrarSecao('clientes', this)">👤 Clientes</button>
+            <button onclick="mostrarSecao('veiculos', this)">🚘 Veículos</button>
+            <button onclick="mostrarSecao('planos', this)">💰 Preços e Planos</button>
+            <button onclick="mostrarSecao('relatorios', this)">📊 Relatórios</button>
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <div class="topbar">
+            <div>
+                <h1 id="tituloPagina">Dashboard</h1>
+                <div class="date" id="dataAtual"></div>
+            </div>
+
+            <button class="btn btn-primary" onclick="abrirEntrada()">
+                + Nova Entrada
+            </button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="section active">
+
+            <div class="cards">
+
+                <div class="card">
+                    <div class="card-title">Vagas disponíveis</div>
+                    <div class="card-value green" id="dashLivres">0</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Vagas ocupadas</div>
+                    <div class="card-value red" id="dashOcupadas">0</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Veículos no local</div>
+                    <div class="card-value blue" id="dashVeiculos">0</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Faturamento</div>
+                    <div class="card-value orange" id="dashFaturamento">
+                        R$ 0,00
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Mapa de vagas</h2>
+
+                    <button class="btn btn-primary" onclick="mostrarSecao('vagas')">
+                        Ver todas
+                    </button>
+                </div>
+
+                <div class="parking-grid" id="dashboardVagas"></div>
+
+            </div>
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Veículos estacionados</h2>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Veículo</th>
+                                <th>Vaga</th>
+                                <th>Entrada</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="dashboardTabela"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ENTRADA / SAÍDA -->
+        <section id="entrada" class="section">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Controle de Entrada e Saída</h2>
+
+                    <button class="btn btn-primary" onclick="abrirEntrada()">
+                        + Registrar entrada
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="buscarPlaca" placeholder="Pesquisar por placa..." oninput="renderEntradas()">
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Veículo</th>
+                                <th>Vaga</th>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaEntradas"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- VAGAS -->
+        <section id="vagas" class="section">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Controle de Vagas</h2>
+                </div>
+
+                <div class="parking-grid" id="todasVagas"></div>
+
+            </div>
+
+        </section>
+
+        <!-- CLIENTES -->
+        <section id="clientes" class="section">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Cadastro de Clientes</h2>
+
+                    <button class="btn btn-primary" onclick="abrirCliente()">
+                        + Novo cliente
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <input id="buscarCliente" placeholder="Pesquisar cliente..." oninput="renderClientes()">
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Telefone</th>
+                                <th>E-mail</th>
+                                <th>Plano</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaClientes"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- VEÍCULOS -->
+        <section id="veiculos" class="section">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Cadastro de Veículos</h2>
+
+                    <button class="btn btn-primary" onclick="abrirVeiculo()">
+                        + Novo veículo
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <input id="buscarVeiculo" placeholder="Pesquisar por placa, modelo ou marca..."
+                        oninput="renderVeiculos()">
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Cor</th>
+                                <th>Ano</th>
+                                <th>Tipo</th>
+                                <th>Tamanho</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaVeiculos"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- PLANOS -->
+        <section id="planos" class="section">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Preços e Planos</h2>
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="input-group">
+                        <label>Preço por hora</label>
+                        <input type="number" id="precoHora" step="0.01">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Preço da diária</label>
+                        <input type="number" id="precoDiaria" step="0.01">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Plano mensal</label>
+                        <input type="number" id="precoMensal" step="0.01">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Plano anual</label>
+                        <input type="number" id="precoAnual" step="0.01">
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-success" onclick="salvarPrecos()">
+                        Salvar preços
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- RELATÓRIOS -->
+        <section id="relatorios" class="section">
+
+            <div class="report-grid">
+
+                <div class="report-card">
+                    <h3>Total de clientes</h3>
+                    <div class="report-number" id="relClientes">0</div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Total de veículos</h3>
+                    <div class="report-number" id="relVeiculos">0</div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Total de entradas</h3>
+                    <div class="report-number" id="relEntradas">0</div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Veículos presentes</h3>
+                    <div class="report-number" id="relPresentes">0</div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Vagas livres</h3>
+                    <div class="report-number" id="relLivres">0</div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Faturamento</h3>
+                    <div class="report-number" id="relFaturamento">
+                        R$ 0,00
+                    </div>
+                </div>
+
+            </div>
+
+            <br>
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Histórico de movimentações</h2>
+
+                    <button class="btn btn-primary" onclick="window.print()">
+                        Imprimir relatório
+                    </button>
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="relatorioTabela"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- MODAL ENTRADA -->
+    <div class="modal" id="modalEntrada">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2>Registrar entrada</h2>
+                <button class="close" onclick="fecharModal('modalEntrada')">
+                    ×
+                </button>
+            </div>
+
+            <form onsubmit="registrarEntrada(event)">
+
+                <div class="form-grid">
+
+                    <div class="input-group">
+                        <label>Placa</label>
+                        <input id="entradaPlaca" required placeholder="ABC-1234">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Vaga</label>
+
+                        <select id="entradaVaga" required>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button type="submit" class="btn btn-success">
+                        Registrar entrada
+                    </button>
+
+                    <button type="button" class="btn btn-danger" onclick="fecharModal('modalEntrada')">
+                        Cancelar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- MODAL CLIENTE -->
+    <div class="modal" id="modalCliente">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2>Novo cliente</h2>
+
+                <button class="close" onclick="fecharModal('modalCliente')">
+                    ×
+                </button>
+            </div>
+
+            <form onsubmit="salvarCliente(event)">
+
+                <div class="form-grid">
+
+                    <div class="input-group">
+                        <label>Nome</label>
+                        <input id="clienteNome" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>CPF</label>
+                        <input id="clienteCpf">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Telefone</label>
+                        <input id="clienteTelefone">
+                    </div>
+
+                    <div class="input-group">
+                        <label>E-mail</label>
+                        <input id="clienteEmail" type="email">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Plano</label>
+
+                        <select id="clientePlano">
+
+                            <option value="Avulso">
+                                Avulso
+                            </option>
+
+                            <option value="Mensal">
+                                Mensal
+                            </option>
+
+                            <option value="Anual">
+                                Anual
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button class="btn btn-success">
+                        Cadastrar
+                    </button>
+
+                    <button type="button" class="btn btn-danger" onclick="fecharModal('modalCliente')">
+                        Cancelar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- MODAL VEÍCULO -->
+    <div class="modal" id="modalVeiculo">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>Novo veículo</h2>
+
+                <button class="close" onclick="fecharModal('modalVeiculo')">
+                    ×
+                </button>
+
+            </div>
+
+            <form onsubmit="salvarVeiculo(event)">
+
+                <div class="form-grid">
+
+                    <div class="input-group">
+                        <label>Placa</label>
+                        <input id="veiculoPlaca" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Marca</label>
+                        <input id="veiculoMarca">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Modelo</label>
+                        <input id="veiculoModelo">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Cor</label>
+                        <input id="veiculoCor">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Ano</label>
+                        <input id="veiculoAno" type="number">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Tipo</label>
+
+                        <select id="veiculoTipo">
+
+                            <option>Carro</option>
+                            <option>Moto</option>
+                            <option>Caminhonete</option>
+                            <option>Van</option>
+                            <option>Caminhão</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>Tamanho</label>
+
+                        <select id="veiculoTamanho">
+
+                            <option>Pequeno</option>
+                            <option>Médio</option>
+                            <option>Grande</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button class="btn btn-success">
+                        Cadastrar
+                    </button>
+
+                    <button type="button" class="btn btn-danger" onclick="fecharModal('modalVeiculo')">
+                        Cancelar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        /* ==============================
+           DADOS
+        ============================== */
+
+        let clientes =
+            JSON.parse(localStorage.getItem("clientes")) || [];
+
+        let veiculos =
+            JSON.parse(localStorage.getItem("veiculos")) || [];
+
+        let entradas =
+            JSON.parse(localStorage.getItem("entradas")) || [];
+
+        let faturamento =
+            Number(localStorage.getItem("faturamento")) || 0;
+
+        let precos =
+            JSON.parse(localStorage.getItem("precos")) || {
+                hora: 10,
+                diaria: 50,
+                mensal: 250,
+                anual: 2500
+            };
+
+
+        /* ==============================
+           VAGAS
+        ============================== */
+
+        const vagas = [];
+
+        for (let i = 1; i <= 24; i++) {
+
+            let tipo = "normal";
+
+            if (i === 5 || i === 6) {
+                tipo = "preferencial";
+            }
+
+            if (i === 11) {
+                tipo = "pcd";
+            }
+
+            if (i === 12) {
+                tipo = "pcd";
+            }
+
+            if (i === 23 || i === 24) {
+                tipo = "moto";
+            }
+
+            vagas.push({
+                numero: i,
+                tipo: tipo
+            });
+
+        }
+
+
+        /* ==============================
+           NAVEGAÇÃO
+        ============================== */
+
+        function mostrarSecao(id, botao = null) {
+
+            document
+                .querySelectorAll(".section")
+                .forEach(secao => {
+                    secao.classList.remove("active");
+                });
+
+            document
+                .getElementById(id)
+                .classList.add("active");
+
+            document
+                .querySelectorAll(".menu button")
+                .forEach(btn => {
+                    btn.classList.remove("active");
+                });
+
+            if (botao) {
+                botao.classList.add("active");
+            }
+
+            const nomes = {
+                dashboard: "Dashboard",
+                entrada: "Entrada / Saída",
+                vagas: "Controle de Vagas",
+                clientes: "Clientes",
+                veiculos: "Veículos",
+                planos: "Preços e Planos",
+                relatorios: "Relatórios"
+            };
+
+            document.getElementById("tituloPagina").textContent =
+                nomes[id];
+
+            atualizarTudo();
+        }
+
+
+        /* ==============================
+           MODAIS
+        ============================== */
+
+        function abrirEntrada() {
+
+            atualizarSelectVagas();
+
+            document
+                .getElementById("modalEntrada")
+                .classList.add("show");
+
+        }
+
+
+        function abrirCliente() {
+
+            document
+                .getElementById("modalCliente")
+                .classList.add("show");
+
+        }
+
+
+        function abrirVeiculo() {
+
+            document
+                .getElementById("modalVeiculo")
+                .classList.add("show");
+
+        }
+
+
+        function fecharModal(id) {
+
+            document
+                .getElementById(id)
+                .classList.remove("show");
+
+        }
+
+
+        /* ==============================
+           VAGAS
+        ============================== */
+
+        function vagaOcupada(numero) {
+
+            return entradas.some(e =>
+                e.vaga == numero &&
+                e.status === "Em andamento"
+            );
+
+        }
+
+
+        function classeVaga(vaga) {
+
+            if (vagaOcupada(vaga.numero)) {
+                return "ocupada";
+            }
+
+            if (vaga.tipo === "preferencial") {
+                return "preferencial";
+            }
+
+            if (vaga.tipo === "pcd") {
+                return "pcd";
+            }
+
+            if (vaga.tipo === "moto") {
+                return "moto";
+            }
+
+            return "livre";
+
+        }
+
+
+        function nomeTipo(tipo) {
+
+            const tipos = {
+                normal: "Normal",
+                preferencial: "Preferencial",
+                pcd: "PCD",
+                moto: "Moto"
+            };
+
+            return tipos[tipo] || tipo;
+
+        }
+
+
+        function criarVagaHTML(vaga) {
+
+            const ocupada = vagaOcupada(vaga.numero);
+
+            const entrada = entradas.find(e =>
+                e.vaga == vaga.numero &&
+                e.status === "Em andamento"
+            );
+
+            return `
+            <div class="vaga ${classeVaga(vaga)}">
+
+                <strong>Vaga ${vaga.numero}</strong>
+
+                <small>
+                    ${nomeTipo(vaga.tipo)}
+                </small>
+
+                <br>
+
+                <small>
+                    ${ocupada
+                    ? entrada.placa
+                    : "Livre"}
+                </small>
+
+            </div>
+        `;
+
+        }
+
+
+        function renderVagas() {
+
+            document.getElementById("todasVagas").innerHTML =
+                vagas.map(criarVagaHTML).join("");
+
+            document.getElementById("dashboardVagas").innerHTML =
+                vagas.slice(0, 12).map(criarVagaHTML).join("");
+
+        }
+
+
+        function atualizarSelectVagas() {
+
+            const select =
+                document.getElementById("entradaVaga");
+
+            const livres =
+                vagas.filter(v => !vagaOcupada(v.numero));
+
+            select.innerHTML = livres.map(v => `
+            <option value="${v.numero}">
+                Vaga ${v.numero} - ${nomeTipo(v.tipo)}
+            </option>
+        `).join("");
+
+        }
+
+
+        /* ==============================
+           ENTRADAS
+        ============================== */
+
+        function registrarEntrada(event) {
+
+            event.preventDefault();
+
+            const placa =
+                document
+                    .getElementById("entradaPlaca")
+                    .value
+                    .toUpperCase()
+                    .trim();
+
+            const vaga =
+                document.getElementById("entradaVaga").value;
+
+            if (!vaga) {
+                alert("Não existem vagas disponíveis.");
+                return;
+            }
+
+            if (vagaOcupada(vaga)) {
+                alert("Essa vaga já está ocupada.");
+                return;
+            }
+
+            const agora = new Date();
+
+            const entrada = {
+
+                id: Date.now(),
+
+                placa: placa,
+
+                vaga: vaga,
+
+                entrada: agora.toISOString(),
+
+                saida: null,
+
+                valor: 0,
+
+                status: "Em andamento"
+
+            };
+
+            entradas.push(entrada);
+
+            salvarDados();
+
+            document
+                .querySelector("#modalEntrada form")
+                .reset();
+
+            fecharModal("modalEntrada");
+
+            atualizarTudo();
+
+            alert("Entrada registrada com sucesso!");
+
+        }
+
+
+        function calcularValor(entrada) {
+
+            const inicio =
+                new Date(entrada.entrada);
+
+            const fim =
+                new Date();
+
+            const minutos =
+                Math.ceil((fim - inicio) / 60000);
+
+            const horas =
+                Math.max(1, Math.ceil(minutos / 60));
+
+            return horas * Number(precos.hora);
+
+        }
+
+
+        function registrarSaida(id) {
+
+            const entrada =
+                entradas.find(e => e.id === id);
+
+            if (!entrada) return;
+
+            const valor =
+                calcularValor(entrada);
+
+            entrada.saida =
+                new Date().toISOString();
+
+            entrada.valor =
+                valor;
+
+            entrada.status =
+                "Finalizado";
+
+            faturamento += valor;
+
+            salvarDados();
+
+            atualizarTudo();
+
+            alert(
+                "Saída registrada!\nValor: " +
+                formatarMoeda(valor)
+            );
+
+        }
+
+
+        function renderEntradas() {
+
+            const busca =
+                document
+                    .getElementById("buscarPlaca")
+                    .value
+                    .toLowerCase();
+
+            const lista =
+                entradas
+                    .filter(e =>
+                        e.placa.toLowerCase()
+                            .includes(busca)
+                    )
+                    .sort((a, b) =>
+                        new Date(b.entrada) -
+                        new Date(a.entrada)
+                    );
+
+            const tbody =
+                document.getElementById("tabelaEntradas");
+
+            if (lista.length === 0) {
+
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        Nenhuma movimentação encontrada.
+                    </td>
+                </tr>
+            `;
+
+                return;
+            }
+
+            tbody.innerHTML =
+                lista.map(e => {
+
+                    const veiculo =
+                        veiculos.find(v =>
+                            v.placa.toUpperCase() ===
+                            e.placa.toUpperCase()
+                        );
+
+                    const modelo =
+                        veiculo
+                            ? `${veiculo.marca} ${veiculo.modelo}`
+                            : "Não cadastrado";
+
+                    return `
+                    <tr>
+
+                        <td><strong>${e.placa}</strong></td>
+
+                        <td>${modelo}</td>
+
+                        <td>Vaga ${e.vaga}</td>
+
+                        <td>${formatarData(e.entrada)}</td>
+
+                        <td>
+                            ${e.saida
+                            ? formatarData(e.saida)
+                            : "-"}
+                        </td>
+
+                        <td>
+                            ${e.valor > 0
+                            ? formatarMoeda(e.valor)
+                            : "-"}
+                        </td>
+
+                        <td>
+
+                            <span class="status ${e.status === "Em andamento"
+                            ? "status-ocupada"
+                            : "status-livre"
+                        }">
+
+                                ${e.status}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            ${e.status === "Em andamento"
+                            ?
+                            `<button
+                                    class="btn btn-success"
+                                    onclick="registrarSaida(${e.id})">
+                                    Registrar saída
+                                </button>`
+                            :
+                            "-"
+                        }
+
+                        </td>
+
+                    </tr>
+                `;
+
+                }).join("");
+
+        }
+
+
+        /* ==============================
+           CLIENTES
+        ============================== */
+
+        function salvarCliente(event) {
+
+            event.preventDefault();
+
+            const cliente = {
+
+                id: Date.now(),
+
+                nome:
+                    document.getElementById("clienteNome").value,
+
+                cpf:
+                    document.getElementById("clienteCpf").value,
+
+                telefone:
+                    document.getElementById("clienteTelefone").value,
+
+                email:
+                    document.getElementById("clienteEmail").value,
+
+                plano:
+                    document.getElementById("clientePlano").value
+
+            };
+
+            clientes.push(cliente);
+
+            salvarDados();
+
+            event.target.reset();
+
+            fecharModal("modalCliente");
+
+            atualizarTudo();
+
+            alert("Cliente cadastrado!");
+
+        }
+
+
+        function excluirCliente(id) {
+
+            if (!confirm("Deseja excluir este cliente?")) {
+                return;
+            }
+
+            clientes =
+                clientes.filter(c => c.id !== id);
+
+            salvarDados();
+
+            atualizarTudo();
+
+        }
+
+
+        function renderClientes() {
+
+            const busca =
+                document
+                    .getElementById("buscarCliente")
+                    .value
+                    .toLowerCase();
+
+            const lista =
+                clientes.filter(c =>
+                    c.nome.toLowerCase().includes(busca) ||
+                    c.cpf.toLowerCase().includes(busca)
+                );
+
+            const tbody =
+                document.getElementById("tabelaClientes");
+
+            tbody.innerHTML =
+                lista.map(c => `
+
+                <tr>
+
+                    <td>${c.nome}</td>
+
+                    <td>${c.cpf || "-"}</td>
+
+                    <td>${c.telefone || "-"}</td>
+
+                    <td>${c.email || "-"}</td>
+
+                    <td>${c.plano}</td>
+
+                    <td>
+
+                        <button
+                            class="btn btn-danger"
+                            onclick="excluirCliente(${c.id})">
+                            Excluir
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `).join("");
+
+        }
+
+
+        /* ==============================
+           VEÍCULOS
+        ============================== */
+
+        function salvarVeiculo(event) {
+
+            event.preventDefault();
+
+            const placa =
+                document
+                    .getElementById("veiculoPlaca")
+                    .value
+                    .toUpperCase()
+                    .trim();
+
+            if (
+                veiculos.some(v =>
+                    v.placa.toUpperCase() === placa
+                )
+            ) {
+
+                alert("Essa placa já está cadastrada.");
+
+                return;
+
+            }
+
+            const veiculo = {
+
+                id: Date.now(),
+
+                placa: placa,
+
+                marca:
+                    document.getElementById("veiculoMarca").value,
+
+                modelo:
+                    document.getElementById("veiculoModelo").value,
+
+                cor:
+                    document.getElementById("veiculoCor").value,
+
+                ano:
+                    document.getElementById("veiculoAno").value,
+
+                tipo:
+                    document.getElementById("veiculoTipo").value,
+
+                tamanho:
+                    document.getElementById("veiculoTamanho").value
+
+            };
+
+            veiculos.push(veiculo);
+
+            salvarDados();
+
+            event.target.reset();
+
+            fecharModal("modalVeiculo");
+
+            atualizarTudo();
+
+            alert("Veículo cadastrado!");
+
+        }
+
+
+        function excluirVeiculo(id) {
+
+            if (!confirm("Deseja excluir este veículo?")) {
+                return;
+            }
+
+            veiculos =
+                veiculos.filter(v => v.id !== id);
+
+            salvarDados();
+
+            atualizarTudo();
+
+        }
+
+
+        function renderVeiculos() {
+
+            const busca =
+                document
+                    .getElementById("buscarVeiculo")
+                    .value
+                    .toLowerCase();
+
+            const lista =
+                veiculos.filter(v =>
+                    v.placa.toLowerCase().includes(busca) ||
+                    v.modelo.toLowerCase().includes(busca) ||
+                    v.marca.toLowerCase().includes(busca)
+                );
+
+            const tbody =
+                document.getElementById("tabelaVeiculos");
+
+            tbody.innerHTML =
+                lista.map(v => `
+
+                <tr>
+
+                    <td><strong>${v.placa}</strong></td>
+
+                    <td>${v.marca || "-"}</td>
+
+                    <td>${v.modelo || "-"}</td>
+
+                    <td>${v.cor || "-"}</td>
+
+                    <td>${v.ano || "-"}</td>
+
+                    <td>${v.tipo}</td>
+
+                    <td>${v.tamanho}</td>
+
+                    <td>
+
+                        <button
+                            class="btn btn-danger"
+                            onclick="excluirVeiculo(${v.id})">
+                            Excluir
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `).join("");
+
+        }
+
+
+        /* ==============================
+           PREÇOS
+        ============================== */
+
+        function carregarPrecos() {
+
+            document.getElementById("precoHora").value =
+                precos.hora;
+
+            document.getElementById("precoDiaria").value =
+                precos.diaria;
+
+            document.getElementById("precoMensal").value =
+                precos.mensal;
+
+            document.getElementById("precoAnual").value =
+                precos.anual;
+
+        }
+
+
+        function salvarPrecos() {
+
+            precos = {
+
+                hora:
+                    Number(document.getElementById("precoHora").value),
+
+                diaria:
+                    Number(document.getElementById("precoDiaria").value),
+
+                mensal:
+                    Number(document.getElementById("precoMensal").value),
+
+                anual:
+                    Number(document.getElementById("precoAnual").value)
+
+            };
+
+            localStorage.setItem(
+                "precos",
+                JSON.stringify(precos)
+            );
+
+            alert("Preços atualizados!");
+
+        }
+
+
+        /* ==============================
+           DASHBOARD
+        ============================== */
+
+        function atualizarDashboard() {
+
+            const ocupadas =
+                entradas.filter(e =>
+                    e.status === "Em andamento"
+                ).length;
+
+            const livres =
+                vagas.length - ocupadas;
+
+            document.getElementById("dashLivres")
+                .textContent = livres;
+
+            document.getElementById("dashOcupadas")
+                .textContent = ocupadas;
+
+            document.getElementById("dashVeiculos")
+                .textContent = ocupadas;
+
+            document.getElementById("dashFaturamento")
+                .textContent = formatarMoeda(faturamento);
+
+
+            const tbody =
+                document.getElementById("dashboardTabela");
+
+            const presentes =
+                entradas
+                    .filter(e =>
+                        e.status === "Em andamento"
+                    );
+
+            tbody.innerHTML =
+                presentes.map(e => {
+
+                    const veiculo =
+                        veiculos.find(v =>
+                            v.placa === e.placa
+                        );
+
+                    return `
+
+                    <tr>
+
+                        <td>
+                            <strong>${e.placa}</strong>
+                        </td>
+
+                        <td>
+                            ${veiculo
+                            ? veiculo.modelo
+                            : "-"
+                        }
+                        </td>
+
+                        <td>
+                            Vaga ${e.vaga}
+                        </td>
+
+                        <td>
+                            ${formatarData(e.entrada)}
+                        </td>
+
+                        <td>
+                            <span class="status status-ocupada">
+                                Estacionado
+                            </span>
+                        </td>
+
+                    </tr>
+
+                `;
+
+                }).join("");
+
+        }
+
+
+        /* ==============================
+           RELATÓRIOS
+        ============================== */
+
+        function atualizarRelatorios() {
+
+            const presentes =
+                entradas.filter(e =>
+                    e.status === "Em andamento"
+                ).length;
+
+            const livres =
+                vagas.length - presentes;
+
+            document.getElementById("relClientes")
+                .textContent = clientes.length;
+
+            document.getElementById("relVeiculos")
+                .textContent = veiculos.length;
+
+            document.getElementById("relEntradas")
+                .textContent = entradas.length;
+
+            document.getElementById("relPresentes")
+                .textContent = presentes;
+
+            document.getElementById("relLivres")
+                .textContent = livres;
+
+            document.getElementById("relFaturamento")
+                .textContent = formatarMoeda(faturamento);
+
+
+            const tbody =
+                document.getElementById("relatorioTabela");
+
+            tbody.innerHTML =
+                entradas
+                    .slice()
+                    .reverse()
+                    .map(e => `
+
+                    <tr>
+
+                        <td>${e.placa}</td>
+
+                        <td>${formatarData(e.entrada)}</td>
+
+                        <td>
+                            ${e.saida
+                            ? formatarData(e.saida)
+                            : "-"
+                        }
+                        </td>
+
+                        <td>
+                            ${e.valor
+                            ? formatarMoeda(e.valor)
+                            : "-"
+                        }
+                        </td>
+
+                    </tr>
+
+                `).join("");
+
+        }
+
+
+        /* ==============================
+           UTILIDADES
+        ============================== */
+
+        function formatarMoeda(valor) {
+
+            return Number(valor).toLocaleString(
+                "pt-BR",
+                {
+                    style: "currency",
+                    currency: "BRL"
+                }
+            );
+
+        }
+
+
+        function formatarData(data) {
+
+            if (!data) return "-";
+
+            return new Date(data).toLocaleString(
+                "pt-BR"
+            );
+
+        }
+
+
+        function salvarDados() {
+
+            localStorage.setItem(
+                "clientes",
+                JSON.stringify(clientes)
+            );
+
+            localStorage.setItem(
+                "veiculos",
+                JSON.stringify(veiculos)
+            );
+
+            localStorage.setItem(
+                "entradas",
+                JSON.stringify(entradas)
+            );
+
+            localStorage.setItem(
+                "faturamento",
+                faturamento
+            );
+
+        }
+
+
+        function atualizarTudo() {
+
+            renderVagas();
+
+            renderEntradas();
+
+            renderClientes();
+
+            renderVeiculos();
+
+            atualizarDashboard();
+
+            atualizarRelatorios();
+
+            carregarPrecos();
+
+        }
+
+
+        /* ==============================
+           DATA
+        ============================== */
+
+        function atualizarData() {
+
+            const agora = new Date();
+
+            document.getElementById("dataAtual")
+                .textContent =
+                agora.toLocaleDateString(
+                    "pt-BR",
+                    {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    }
+                );
+
+        }
+
+
+        /* ==============================
+           INICIALIZAÇÃO
+        ============================== */
+
+        atualizarData();
+
+        atualizarTudo();
+
+    </script>
+
+</body>
+
+</html>
